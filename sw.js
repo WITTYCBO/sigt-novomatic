@@ -1,16 +1,14 @@
-// SIGT Novomatic — Service Worker
-// Automáticos Canarios · v1.1
-
-const CACHE_NAME = 'sigt-novomatic-v1';
+// SIGT Novomatic — Service Worker v2
+const CACHE_NAME = 'sigt-novomatic-v2';
 const ASSETS = [
   '/sigt-novomatic/',
   '/sigt-novomatic/index.html',
   '/sigt-novomatic/manifest.json',
-  '/sigt-novomatic/icons/icon-192.png',
-  '/sigt-novomatic/icons/icon-512.png'
+  '/sigt-novomatic/sw.js',
+  '/sigt-novomatic/icons/icon-192x192.png',
+  '/sigt-novomatic/icons/icon-512x512.png'
 ];
 
-// Install: cache all assets
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
@@ -18,7 +16,6 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// Activate: clean old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -28,19 +25,12 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch: cache-first for local assets, network-first for external (fonts, etc.)
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-
-  // External requests (Google Fonts, etc.) — network first, fallback cache
   if (url.origin !== self.location.origin) {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
-    );
+    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
     return;
   }
-
-  // Local assets — cache first
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
