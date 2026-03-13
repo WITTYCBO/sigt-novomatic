@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SIGT — Solicitud Pendrive Novomatic</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SIGT Novomatic">
+<meta name="theme-color" content="#F5A623">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<!-- SEO / Share -->
+<meta name="description" content="Automáticos Canarios · Gestión de solicitudes de pendrive de actualización Novomatic">
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0B1629; --navy-mid: #132040; --navy-light: #1E3160;
+    --amber: #F5A623; --amber-dim: #C47D0E; --amber-glow: rgba(245,166,35,0.15);
+    --red: #E03E3E; --green: #27C880; --white: #F0F4FF;
+    --muted: #7A90B8; --border: rgba(245,166,35,0.25); --card: rgba(19,32,64,0.85);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--navy); color: var(--white);
+    font-family: 'IBM Plex Sans', sans-serif; min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(245,166,35,0.12) 0%, transparent 60%),
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(245,166,35,0.04) 39px, rgba(245,166,35,0.04) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(245,166,35,0.04) 39px, rgba(245,166,35,0.04) 40px);
+  }
+  header {
+    background: linear-gradient(135deg, #0B1629 0%, #1a2d54 100%);
+    border-bottom: 2px solid var(--amber); position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+  }
+  .header-inner { max-width: 860px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; gap: 16px; }
+  .logo-badge {
+    width: 46px; height: 46px; background: var(--amber); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--navy);
+    letter-spacing: 1px; flex-shrink: 0; box-shadow: 0 0 20px rgba(245,166,35,0.4);
+  }
+  .header-text h1 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--white); line-height: 1; }
+  .header-text p { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; letter-spacing: 1px; margin-top: 3px; }
+  .header-pill { margin-left: auto; background: rgba(245,166,35,0.15); border: 1px solid var(--amber); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--amber); letter-spacing: 1px; }
+  main { max-width: 860px; margin: 32px auto; padding: 0 16px 80px; }
+
+  /* STEPS */
+  .steps-bar { display: flex; align-items: center; margin-bottom: 36px; padding: 0 8px; }
+  .step-item { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; cursor: pointer; }
+  .step-item:not(:last-child)::after { content: ''; position: absolute; top: 18px; left: 55%; width: 90%; height: 2px; background: var(--border); z-index: 0; }
+  .step-item.done:not(:last-child)::after { background: var(--amber); }
+  .step-circle { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); background: var(--navy-mid); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--muted); z-index: 1; transition: all 0.3s; position: relative; }
+  .step-item.active .step-circle { border-color: var(--amber); background: var(--amber-glow); color: var(--amber); box-shadow: 0 0 16px rgba(245,166,35,0.35); }
+  .step-item.done .step-circle { border-color: var(--green); background: rgba(39,200,128,0.15); color: var(--green); }
+  .step-label { font-size: 10px; color: var(--muted); margin-top: 6px; text-align: center; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.5px; max-width: 70px; }
+  .step-item.active .step-label { color: var(--amber); }
+  .step-item.done .step-label { color: var(--green); }
+
+  /* SECTIONS */
+  .section { display: none; animation: fadeIn 0.4s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .section-icon { width: 40px; height: 40px; background: var(--amber-glow); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .section-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--white); }
+  .section-header p { font-size: 12px; color: var(--muted); margin-top: 2px; font-family: 'IBM Plex Mono', monospace; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 16px; backdrop-filter: blur(10px); }
+
+  .machine-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; position: relative; overflow: hidden; transition: border-color 0.3s, box-shadow 0.3s; }
+  .machine-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+  .machine-card.m1::before { background: #F5A623; }
+  .machine-card.m2::before { background: #5B9CF5; }
+  .machine-card.m3::before { background: #E03E3E; }
+  .machine-card.m4::before { background: #27C880; }
+  .machine-card.m5::before { background: #B07FFF; }
+  .machine-card.has-error { border-color: rgba(224,62,62,0.6) !important; box-shadow: 0 0 16px rgba(224,62,62,0.15); }
+
+  .machine-badge { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 2px; padding: 3px 10px; border-radius: 4px; display: inline-block; margin-bottom: 16px; }
+  .m1 .machine-badge { background: rgba(245,166,35,0.2); color: #F5A623; border: 1px solid rgba(245,166,35,0.4); }
+  .m2 .machine-badge { background: rgba(91,156,245,0.2); color: #5B9CF5; border: 1px solid rgba(91,156,245,0.4); }
+  .m3 .machine-badge { background: rgba(224,62,62,0.2); color: #E03E3E; border: 1px solid rgba(224,62,62,0.4); }
+  .m4 .machine-badge { background: rgba(39,200,128,0.2); color: #27C880; border: 1px solid rgba(39,200,128,0.4); }
+  .m5 .machine-badge { background: rgba(176,127,255,0.2); color: #B07FFF; border: 1px solid rgba(176,127,255,0.4); }
+
+  /* ERROR TOGGLE */
+  .error-toggle { display: flex; align-items: center; gap: 8px; background: rgba(11,22,41,0.8); border: 1px solid rgba(122,144,184,0.3); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.2s; user-select: none; white-space: nowrap; }
+  .error-toggle:hover { border-color: var(--red); }
+  .error-toggle.active { background: rgba(224,62,62,0.12); border-color: var(--red); box-shadow: 0 0 0 3px rgba(224,62,62,0.15); }
+  .toggle-switch { width: 32px; height: 18px; border-radius: 9px; background: rgba(122,144,184,0.25); position: relative; flex-shrink: 0; transition: background 0.2s; }
+  .toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); transition: all 0.2s; }
+  .error-toggle.active .toggle-switch { background: rgba(224,62,62,0.5); }
+  .error-toggle.active .toggle-switch::after { left: 17px; background: var(--red); }
+  .toggle-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); transition: color 0.2s; line-height: 1.3; }
+  .error-toggle.active .toggle-label { color: var(--red); font-weight: 600; }
+  .error-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); display: none; animation: pulse-red 1s infinite; flex-shrink: 0; }
+  .error-toggle.active .error-dot { display: block; }
+  @keyframes pulse-red { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.5); } }
+
+  /* FORM */
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .field-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+  .field-row.single { grid-template-columns: 1fr; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  input[type="text"], input[type="date"], input[type="number"], select { background: rgba(11,22,41,0.8); border: 1px solid rgba(122,144,184,0.3); border-radius: 8px; padding: 10px 14px; color: var(--white); font-family: 'IBM Plex Mono', monospace; font-size: 14px; transition: border-color 0.2s, box-shadow 0.2s; outline: none; width: 100%; }
+  input:focus, select:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,166,35,0.15); }
+  input::placeholder { color: rgba(122,144,184,0.5); }
+  select option { background: var(--navy-mid); }
+
+  /* PHOTOS */
+  .photo-zone { border: 2px dashed var(--border); border-radius: 10px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: rgba(11,22,41,0.5); position: relative; overflow: hidden; }
+  .photo-zone:hover { border-color: var(--amber); background: var(--amber-glow); }
+  .photo-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .photo-zone-icon { font-size: 24px; margin-bottom: 6px; }
+  .photo-zone p { font-size: 12px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+  .photo-zone strong { color: var(--amber); font-size: 12px; }
+  .photo-previews { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .photo-thumb { width: 72px; height: 72px; border-radius: 6px; object-fit: cover; border: 2px solid var(--border); }
+  .photo-thumb-wrap { position: relative; display: inline-block; }
+  .photo-thumb-wrap button { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--red); border: none; color: white; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
+  .photo-label { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; margin-bottom: 8px; letter-spacing: 0.5px; }
+
+  /* BUTTONS */
+  .btn-primary { background: var(--amber); color: var(--navy); border: none; padding: 13px 28px; border-radius: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(245,166,35,0.3); }
+  .btn-primary:hover { background: #FFB93D; box-shadow: 0 6px 28px rgba(245,166,35,0.5); transform: translateY(-1px); }
+  .btn-secondary { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 12px 24px; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .btn-secondary:hover { color: var(--white); border-color: var(--muted); }
+  .btn-whatsapp { background: #25D366; color: white; border: none; padding: 16px 28px; border-radius: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 24px rgba(37,211,102,0.35); }
+  .btn-whatsapp:hover { background: #20C45A; transform: translateY(-2px); box-shadow: 0 10px 32px rgba(37,211,102,0.45); }
+  .btn-download-photos { background: rgba(37,211,102,0.12); color: #25D366; border: 1px solid rgba(37,211,102,0.4); padding: 11px 20px; border-radius: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 1.5px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+  .btn-download-photos:hover { background: rgba(37,211,102,0.22); transform: translateY(-1px); }
+  .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+  /* SUMMARY */
+  .summary-block { background: rgba(11,22,41,0.7); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
+  .summary-block h3 { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 2px; color: var(--amber); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .summary-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 0; gap: 12px; }
+  .summary-row + .summary-row { border-top: 1px solid rgba(122,144,184,0.1); }
+  .summary-key { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; min-width: 130px; letter-spacing: 0.5px; flex-shrink: 0; }
+  .summary-val { font-size: 13px; color: var(--white); font-family: 'IBM Plex Mono', monospace; text-align: right; }
+  .error-badge-sm { display: inline-block; background: rgba(224,62,62,0.15); color: var(--red); border: 1px solid rgba(224,62,62,0.4); border-radius: 4px; font-size: 10px; padding: 1px 6px; font-family: 'IBM Plex Mono', monospace; margin-left: 6px; vertical-align: middle; }
+
+  .machine-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
+  .mscard { border-radius: 10px; padding: 14px; background: rgba(11,22,41,0.7); position: relative; }
+  .mscard.m1 { border: 1px solid rgba(245,166,35,0.4); }
+  .mscard.m2 { border: 1px solid rgba(91,156,245,0.4); }
+  .mscard.m3 { border: 1px solid rgba(224,62,62,0.4); }
+  .mscard.m4 { border: 1px solid rgba(39,200,128,0.4); }
+  .mscard.m5 { border: 1px solid rgba(176,127,255,0.4); }
+  .mscard h4 { font-family: 'Bebas Neue', sans-serif; font-size: 13px; letter-spacing: 2px; margin-bottom: 10px; }
+  .m1 h4 { color: #F5A623; } .m2 h4 { color: #5B9CF5; } .m3 h4 { color: #E03E3E; } .m4 h4 { color: #27C880; } .m5 h4 { color: #B07FFF; }
+  .mscard p { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; margin-bottom: 2px; }
+  .mscard span { font-size: 13px; color: var(--white); font-family: 'IBM Plex Mono', monospace; display: block; margin-bottom: 6px; }
+  .mscard .error-active-tag { position: absolute; top: 10px; right: 10px; background: rgba(224,62,62,0.2); color: var(--red); border: 1px solid rgba(224,62,62,0.5); border-radius: 4px; font-size: 10px; padding: 2px 7px; font-family: 'IBM Plex Mono', monospace; font-weight: 600; animation: pulse-red 1.5s infinite; }
+
+  /* WHATSAPP PREVIEW */
+  .whatsapp-preview { background: #0D1F0F; border: 1px solid #25D366; border-radius: 10px; padding: 20px; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; line-height: 1.7; color: #E8F5E9; white-space: pre-wrap; word-break: break-word; margin-bottom: 20px; max-height: 320px; overflow-y: auto; }
+  .whatsapp-preview::-webkit-scrollbar { width: 5px; }
+  .whatsapp-preview::-webkit-scrollbar-thumb { background: #25D366; border-radius: 3px; }
+
+  /* PHOTO SHARE PANEL */
+  .photo-share-panel { background: rgba(37,211,102,0.07); border: 1px solid rgba(37,211,102,0.3); border-radius: 10px; padding: 18px 20px; margin-bottom: 20px; }
+  .photo-share-panel h4 { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 2px; color: #25D366; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .photo-share-panel p { font-size: 12px; color: rgba(240,244,255,0.65); font-family: 'IBM Plex Mono', monospace; line-height: 1.7; margin-bottom: 10px; }
+  .photo-share-panel ol { font-size: 12px; color: rgba(240,244,255,0.8); font-family: 'IBM Plex Mono', monospace; line-height: 2.1; padding-left: 18px; margin-bottom: 14px; }
+  .photo-share-panel ol li strong { color: #4AE080; }
+  .photo-count-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .photo-chip { background: rgba(37,211,102,0.12); border: 1px solid rgba(37,211,102,0.3); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: #7EFFC0; }
+  .photo-chip.zero { background: rgba(122,144,184,0.1); border-color: rgba(122,144,184,0.2); color: var(--muted); }
+
+  .success-banner { background: rgba(39,200,128,0.12); border: 1px solid var(--green); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .success-banner p { font-size: 13px; color: var(--green); font-family: 'IBM Plex Mono', monospace; }
+  .info-box { background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.25); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 12px; color: rgba(245,166,35,0.9); font-family: 'IBM Plex Mono', monospace; line-height: 1.6; }
+  .info-box strong { color: var(--amber); }
+
+  @media (max-width: 600px) {
+    .field-row, .field-row.triple { grid-template-columns: 1fr; }
+    .machine-summary-grid { grid-template-columns: 1fr; }
+    .header-pill { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-badge">SIGT</div>
+    <div class="header-text">
+      <h1>Solicitud Pendrive Novomatic</h1>
+      <p>AUTOMÁTICOS CANARIOS · GESTIÓN DE ACTUALIZACIONES</p>
+    </div>
+    <div class="header-pill">v1.1 · MAR 2026</div>
+  </div>
+</header>
+
+<main>
+  <div class="steps-bar">
+    <div class="step-item active" id="step-1" onclick="goTo(1)"><div class="step-circle">1</div><div class="step-label">Solicitud</div></div>
+    <div class="step-item" id="step-2" onclick="goTo(2)"><div class="step-circle">2</div><div class="step-label">Máquinas</div></div>
+    <div class="step-item" id="step-3" onclick="goTo(3)"><div class="step-circle">3</div><div class="step-label">Fotos</div></div>
+    <div class="step-item" id="step-4" onclick="goTo(4)"><div class="step-circle">4</div><div class="step-label">Envío</div></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="section active" id="sec-1">
+    <div class="section-header">
+      <div class="section-icon">🏢</div>
+      <div><h2>Datos de la Solicitud</h2><p>INFORMACIÓN GENERAL · TÉCNICO Y LOCAL</p></div>
+    </div>
+    <div class="card">
+      <div class="field-row">
+        <div class="field"><label>📍 Local / Salón</label><input type="text" id="local" placeholder="Ej: Salón New Center" /></div>
+        <div class="field"><label>📅 Fecha de Solicitud</label><input type="date" id="fecha" /></div>
+      </div>
+      <div class="field-row single">
+        <div class="field"><label>👷 Técnico que genera la solicitud</label><input type="text" id="tecnico" placeholder="Nombre completo del técnico" /></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>⚠️ Número de Puesto (del error)</label><input type="text" id="puesto" placeholder="Ej: atSalon3-7" /></div>
+        <div class="field"><label>🔢 Cantidad de Máquinas del Grupo</label>
+          <select id="num_maquinas" onchange="updateMachineCount()">
+            <option value="3">3 Máquinas</option>
+            <option value="4">4 Máquinas</option>
+            <option value="5">5 Máquinas</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn-primary" onclick="nextStep(1)">CONTINUAR →</button></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="section" id="sec-2">
+    <div class="section-header">
+      <div class="section-icon">🎰</div>
+      <div><h2>Datos de las Máquinas</h2><p>NÚMERO DE SERIE Y FABRICACIÓN · MARCAR ERROR ACTIVO</p></div>
+    </div>
+    <div class="info-box">
+      <strong>ℹ️ Error activo:</strong> Activa el toggle <strong>"ERROR ACTIVO"</strong> en las máquinas que muestran el error en pantalla. Deja sin marcar las que no lo muestran. Todos los datos de fabricación se obtienen de la <strong>placa de identificación trasera</strong>.
+    </div>
+    <div id="machines-container"></div>
+    <div class="actions">
+      <button class="btn-secondary" onclick="prevStep(2)">← Atrás</button>
+      <button class="btn-primary" onclick="nextStep(2)">CONTINUAR →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="section" id="sec-3">
+    <div class="section-header">
+      <div class="section-icon">📸</div>
+      <div><h2>Fotografías de Evidencia</h2><p>PLACA DE IDENTIFICACIÓN · PANTALLA DE ERROR</p></div>
+    </div>
+    <div class="info-box">
+      <strong>📌 Requerido por Novomatic:</strong> Haz foto de la placa de identificación (número de serie y fabricación visibles) y de la pantalla de error de cada máquina. Al finalizar, abre WhatsApp y adjunta las fotos directamente desde la galería del móvil.
+    </div>
+    <div class="card" id="photos-container"></div>
+    <div class="actions">
+      <button class="btn-secondary" onclick="prevStep(3)">← Atrás</button>
+      <button class="btn-primary" onclick="nextStep(3)">GENERAR SOLICITUD →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="section" id="sec-4">
+    <div class="section-header">
+      <div class="section-icon">📋</div>
+      <div><h2>Resumen y Envío</h2><p>VERIFICAR DATOS · ENVIAR POR WHATSAPP</p></div>
+    </div>
+
+    <div id="summary-container"></div>
+
+    <!-- PHOTO COUNT SUMMARY -->
+    <div class="photo-share-panel" id="photo-share-panel">
+      <h4>📷 FOTOGRAFÍAS REGISTRADAS</h4>
+      <div class="photo-count-chips" id="photo-chips"></div>
+    </div>
+
+    <div class="section-header" style="margin-top:28px;">
+      <div class="section-icon">💬</div>
+      <div><h2>Mensaje WhatsApp</h2><p>VISTA PREVIA DEL MENSAJE A ENVIAR A NOVOMATIC</p></div>
+    </div>
+    <div class="whatsapp-preview" id="wa-preview"></div>
+
+    <!-- SEND FLOW MOBILE -->
+    <div class="send-flow-card">
+      <div class="send-flow-title">📲 ENVÍO EN DOS PASOS</div>
+      <div class="send-flow-steps">
+        <div class="send-flow-step">
+          <div class="send-flow-num">1</div>
+          <div class="send-flow-text">
+            <strong>Envía el mensaje de texto</strong>
+            <span>Se abre WhatsApp con todos los datos de la solicitud pre-cargados</span>
+          </div>
+        </div>
+        <div class="send-flow-divider"></div>
+        <div class="send-flow-step">
+          <div class="send-flow-num">2</div>
+          <div class="send-flow-text">
+            <strong>Adjunta las fotos desde WhatsApp</strong>
+            <span>Pulsa el icono 📎 en el chat y selecciona las fotos de placas y errores desde tu galería</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:20px;">
+      <button class="btn-whatsapp" onclick="sendWhatsApp()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        PASO 1 · ENVIAR TEXTO
+      </button>
+      <button class="btn-secondary" onclick="copyMessage()">📋 Copiar Mensaje</button>
+      <button class="btn-secondary" onclick="resetAll()">🔄 Nueva Solicitud</button>
+    </div>
+
+    <div id="copy-confirm" style="display:none; margin-top:12px;" class="success-banner">
+      <span>✅</span><p>¡Mensaje copiado al portapapeles!</p>
+    </div>
+    <div class="actions" style="border:none; padding:0; margin-top:16px;">
+      <button class="btn-secondary" onclick="prevStep(4)">← Modificar datos</button>
+    </div>
+  </div>
+</main>
+
+<!-- JSZip for photo download -->
+<script>
+let currentStep = 1;
+let numMachines = 3;
+const photoData = {};
+const machineColors = ['m1','m2','m3','m4','m5'];
+const machineNames = ['MÁQUINA 1','MÁQUINA 2','MÁQUINA 3','MÁQUINA 4','MÁQUINA 5'];
+const machineDots = ['🟡','🔵','🔴','🟢','🟣'];
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+  renderMachines();
+  renderPhotoZones();
+});
+
+function updateMachineCount() {
+  numMachines = parseInt(document.getElementById('num_maquinas').value);
+  renderMachines();
+  renderPhotoZones();
+}
+
+// ---- MACHINES ----
+function renderMachines() {
+  const c = document.getElementById('machines-container');
+  c.innerHTML = '';
+  for (let i = 1; i <= numMachines; i++) {
+    const mc = machineColors[i-1];
+    c.innerHTML += `
+      <div class="machine-card ${mc}" id="mcard_${i}">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+          <span class="machine-badge">${machineDots[i-1]} ${machineNames[i-1]}</span>
+        </div>
+        <div class="field-row triple">
+          <div class="field">
+            <label>N.º Serie (NGS)</label>
+            <input type="text" id="m${i}_serie" placeholder="Ej: 2510863" />
+          </div>
+          <div class="field">
+            <label>N.º Fabricación</label>
+            <input type="text" id="m${i}_fab" placeholder="Ej: 10103179" />
+          </div>
+          <div class="field">
+            <label>Modelo</label>
+            <div style="display:flex; gap:8px; align-items:stretch;">
+              <input type="text" id="m${i}_modelo" placeholder="Ej: FV837E B2" style="flex:1; min-width:0;" />
+              <div class="error-toggle" id="errtoggle_${i}" onclick="toggleError(${i})" title="Marcar si esta máquina muestra el error activo en pantalla">
+                <div class="toggle-switch"></div>
+                <span class="toggle-label">ERROR<br>ACTIVO</span>
+                <div class="error-dot"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+}
+
+function toggleError(i) {
+  const t = document.getElementById(`errtoggle_${i}`);
+  const card = document.getElementById(`mcard_${i}`);
+  const isActive = t.classList.toggle('active');
+  card.classList.toggle('has-error', isActive);
+}
+
+function isErrorActive(i) {
+  const t = document.getElementById(`errtoggle_${i}`);
+  return t && t.classList.contains('active');
+}
+
+// ---- PHOTOS ----
+function renderPhotoZones() {
+  const c = document.getElementById('photos-container');
+  c.innerHTML = '';
+  for (let i = 1; i <= numMachines; i++) {
+    c.innerHTML += `
+      <div style="margin-bottom:24px;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:2px; color:var(--amber); margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border);">
+          ${machineDots[i-1]} ${machineNames[i-1]}
+        </div>
+        <div class="field-row">
+          <div>
+            <div class="photo-label">📷 PLACA DE IDENTIFICACIÓN</div>
+            <div class="photo-zone" onclick="document.getElementById('ph_m${i}_placa').click()">
+              <input type="file" id="ph_m${i}_placa" accept="image/*" multiple onchange="addPhotos('m${i}_placa', this)">
+              <div class="photo-zone-icon">🏷️</div>
+              <p>Toca para <strong>añadir foto</strong><br>N.º serie y fabricación visible</p>
+            </div>
+            <div class="photo-previews" id="prev_m${i}_placa"></div>
+          </div>
+          <div>
+            <div class="photo-label">⚠️ PANTALLA DE ERROR</div>
+            <div class="photo-zone" onclick="document.getElementById('ph_m${i}_error').click()">
+              <input type="file" id="ph_m${i}_error" accept="image/*" multiple onchange="addPhotos('m${i}_error', this)">
+              <div class="photo-zone-icon">🖥️</div>
+              <p>Toca para <strong>añadir foto</strong><br>Error de hardware visible</p>
+            </div>
+            <div class="photo-previews" id="prev_m${i}_error"></div>
+          </div>
+        </div>
+      </div>`;
+  }
+}
+
+function addPhotos(key, input) {
+  if (!photoData[key]) photoData[key] = [];
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => { photoData[key].push(e.target.result); renderPreviews(key); };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function renderPreviews(key) {
+  const c = document.getElementById('prev_' + key);
+  if (!c) return;
+  c.innerHTML = '';
+  (photoData[key] || []).forEach((src, idx) => {
+    c.innerHTML += `<div class="photo-thumb-wrap"><img class="photo-thumb" src="${src}" /><button onclick="removePhoto('${key}',${idx})">✕</button></div>`;
+  });
+}
+
+function removePhoto(key, idx) {
+  photoData[key].splice(idx, 1);
+  renderPreviews(key);
+}
+
+// ---- NAVIGATION ----
+function goTo(step) { if (step < currentStep) setStep(step); }
+function nextStep(from) { if (!validateStep(from)) return; setStep(from + 1); if (from + 1 === 4) buildSummary(); }
+function prevStep(from) { setStep(from - 1); }
+
+function setStep(step) {
+  currentStep = step;
+  document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i + 1 === step));
+  document.querySelectorAll('.step-item').forEach((el, i) => {
+    el.classList.remove('active', 'done');
+    if (i + 1 === step) el.classList.add('active');
+    if (i + 1 < step) el.classList.add('done');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ---- VALIDATION ----
+function validateStep(step) {
+  if (step === 1) {
+    if (!document.getElementById('local').value.trim()) { alert('Por favor indica el nombre del local.'); return false; }
+    if (!document.getElementById('tecnico').value.trim()) { alert('Por favor indica el nombre del técnico.'); return false; }
+    if (!document.getElementById('puesto').value.trim()) { alert('Por favor indica el número de puesto del error.'); return false; }
+  }
+  if (step === 2) {
+    for (let i = 1; i <= numMachines; i++) {
+      if (!document.getElementById(`m${i}_serie`).value.trim() || !document.getElementById(`m${i}_fab`).value.trim()) {
+        alert(`Máquina ${i}: falta el número de serie o de fabricación.`); return false;
+      }
+    }
+  }
+  return true;
+}
+
+// ---- SUMMARY ----
+function buildSummary() {
+  const local = document.getElementById('local').value.trim();
+  const fecha = document.getElementById('fecha').value;
+  const tecnico = document.getElementById('tecnico').value.trim();
+  const puesto = document.getElementById('puesto').value.trim();
+  const fechaFmt = fecha ? new Date(fecha + 'T12:00:00').toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—';
+
+  // Count machines with error
+  const errMachines = [];
+  for (let i = 1; i <= numMachines; i++) if (isErrorActive(i)) errMachines.push(i);
+
+  let machineCards = '';
+  for (let i = 1; i <= numMachines; i++) {
+    const serie = document.getElementById(`m${i}_serie`).value.trim();
+    const fab = document.getElementById(`m${i}_fab`).value.trim();
+    const modelo = document.getElementById(`m${i}_modelo`).value.trim();
+    const err = isErrorActive(i);
+    const mc = machineColors[i-1];
+    machineCards += `
+      <div class="mscard ${mc}">
+        ${err ? '<div class="error-active-tag">⚠ ERROR</div>' : ''}
+        <h4>${machineDots[i-1]} ${machineNames[i-1]}</h4>
+        <p>N.º Serie</p><span>${serie}</span>
+        <p>N.º Fabricación</p><span>${fab}</span>
+        ${modelo ? `<p>Modelo</p><span>${modelo}</span>` : ''}
+      </div>`;
+  }
+
+  // Photo chips
+  let photoSummaryHTML = '';
+  let totalPhotos = 0;
+  for (let i = 1; i <= numMachines; i++) {
+    const p = (photoData[`m${i}_placa`] || []).length;
+    const e = (photoData[`m${i}_error`] || []).length;
+    totalPhotos += p + e;
+    photoSummaryHTML += `<div class="summary-row">
+      <span class="summary-key">${machineNames[i-1]}</span>
+      <span class="summary-val">${p} foto(s) placa · ${e} foto(s) error</span>
+    </div>`;
+  }
+
+  document.getElementById('summary-container').innerHTML = `
+    <div class="summary-block">
+      <h3>📋 DATOS GENERALES</h3>
+      <div class="summary-row"><span class="summary-key">Local</span><span class="summary-val">${local}</span></div>
+      <div class="summary-row"><span class="summary-key">Fecha solicitud</span><span class="summary-val">${fechaFmt}</span></div>
+      <div class="summary-row"><span class="summary-key">Técnico</span><span class="summary-val">${tecnico}</span></div>
+      <div class="summary-row"><span class="summary-key">N.º Puesto (error)</span><span class="summary-val">${puesto}</span></div>
+      <div class="summary-row"><span class="summary-key">Grupo</span><span class="summary-val">${numMachines} máquinas · ${errMachines.length} con error activo</span></div>
+    </div>
+    <div class="machine-summary-grid">${machineCards}</div>
+    <div class="summary-block"><h3>📸 FOTOGRAFÍAS</h3>${photoSummaryHTML}</div>`;
+
+  // Photo chips in share panel
+  let chips = '';
+  for (let i = 1; i <= numMachines; i++) {
+    const p = (photoData[`m${i}_placa`] || []).length;
+    const e = (photoData[`m${i}_error`] || []).length;
+    const total = p + e;
+    chips += `<span class="photo-chip ${total===0?'zero':''}">${machineDots[i-1]} M${i}: ${total} foto${total!==1?'s':''}</span>`;
+  }
+  document.getElementById('photo-chips').innerHTML = chips;
+
+  // Show/hide photo panel
+  document.getElementById('photo-share-panel').style.display = totalPhotos > 0 ? 'block' : 'none';
+
+  // WhatsApp message
+  let waMsg = `🎰 *SOLICITUD PENDRIVE ACTUALIZACIÓN NOVOMATIC*\n_Automáticos Canarios · SIGT_\n━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+  waMsg += `📍 *Local:* ${local}\n📅 *Fecha:* ${fechaFmt}\n👷 *Técnico:* ${tecnico}\n⚠️ *N.º Puesto:* ${puesto}\n🔢 *Grupo:* ${numMachines} máquinas\n\n`;
+  waMsg += `━━━━━━━━━━━━━━━━━━━━━━\n🎰 *DATOS DE MÁQUINAS*\n\n`;
+
+  for (let i = 1; i <= numMachines; i++) {
+    const serie = document.getElementById(`m${i}_serie`).value.trim();
+    const fab = document.getElementById(`m${i}_fab`).value.trim();
+    const modelo = document.getElementById(`m${i}_modelo`).value.trim();
+    const err = isErrorActive(i);
+    waMsg += `${machineDots[i-1]} *${machineNames[i-1]}*${err ? ' ⚠️ _ERROR ACTIVO_' : ''}\n`;
+    waMsg += `   • N.º Serie: *${serie}*\n   • N.º Fabricación: *${fab}*\n`;
+    if (modelo) waMsg += `   • Modelo: ${modelo}\n`;
+    waMsg += `\n`;
+  }
+
+  if (errMachines.length > 0) {
+    waMsg += `⚠️ *Máquinas con error activo en pantalla:* ${errMachines.map(i => machineNames[i-1]).join(', ')}\n\n`;
+  }
+
+  waMsg += `━━━━━━━━━━━━━━━━━━━━━━\nSe solicitan *${numMachines} pendrives* de actualización para el grupo completo.\n`;
+  if (totalPhotos > 0) waMsg += `\n📸 _Se adjuntan ${totalPhotos} fotografía(s) de placas de identificación y pantallas de error._\n`;
+  waMsg += `\n_Generado con SIGT · Automáticos Canarios_`;
+
+  document.getElementById('wa-preview').textContent = waMsg;
+  window._waMsg = waMsg;
+}
+
+
+// ---- WHATSAPP ----
+function sendWhatsApp() {
+  const encoded = encodeURIComponent(window._waMsg || '');
+  window.open(`https://wa.me/34646365886?text=${encoded}`, '_blank');
+}
+
+function copyMessage() {
+  navigator.clipboard.writeText(window._waMsg || '').then(() => {
+    const el = document.getElementById('copy-confirm');
+    el.style.display = 'flex';
+    setTimeout(() => el.style.display = 'none', 3000);
+  });
+}
+
+function resetAll() {
+  if (!confirm('¿Crear nueva solicitud? Se borrarán todos los datos actuales.')) return;
+  Object.keys(photoData).forEach(k => delete photoData[k]);
+  document.getElementById('local').value = '';
+  document.getElementById('tecnico').value = '';
+  document.getElementById('puesto').value = '';
+  document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('num_maquinas').value = '3';
+  numMachines = 3;
+  renderMachines();
+  renderPhotoZones();
+  setStep(1);
+}
+</script>
+
+<!-- Service Worker Registration -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('SIGT SW registrado'))
+        .catch(e => console.warn('SW error:', e));
+    });
+  }
+</script>
+</body>
+</html>
